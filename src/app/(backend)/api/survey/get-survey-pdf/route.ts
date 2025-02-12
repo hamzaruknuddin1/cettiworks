@@ -298,7 +298,46 @@ import puppeteer from "puppeteer";
 import chromium from "@sparticuz/chromium";
 export const dynamic = "force-dynamic"; // ✅ Forces API to fetch fresh data on every request
 
-export const runtime = 'nodejs';
+const isProduction = process.env.NODE_ENV === "production";
+
+async function getBrowser() {
+  let browser;
+  
+  if (isProduction) {
+    // Vercel production environment
+    try {
+      browser = await puppeteerCore.launch({
+        args: [
+          ...chromium.args,
+          "--hide-scrollbars",
+          "--disable-web-security",
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+        ],
+        defaultViewport: chromium.defaultViewport,
+        executablePath: await chromium.executablePath(),
+        headless: true,
+        ignoreHTTPSErrors: true,
+      });
+    } catch (error) {
+      console.error("Error launching browser in production:", error);
+      throw error;
+    }
+  } else {
+    // Local development environment
+    try {
+      browser = await puppeteer.launch({
+        headless: true,
+        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      });
+    } catch (error) {
+      console.error("Error launching browser in development:", error);
+      throw error;
+    }
+  }
+
+  return browser;
+}
 
 export async function POST(request: Request) {
   try {
@@ -487,46 +526,6 @@ export async function POST(request: Request) {
     //   });
     // }
 
-    const isProduction = process.env.NODE_ENV === "production";
-
-  async function getBrowser() {
-    let browser;
-    
-    if (isProduction) {
-      // Vercel production environment
-      try {
-        browser = await puppeteerCore.launch({
-          args: [
-            ...chromium.args,
-            "--hide-scrollbars",
-            "--disable-web-security",
-            "--no-sandbox",
-            "--disable-setuid-sandbox",
-          ],
-          defaultViewport: chromium.defaultViewport,
-          executablePath: await chromium.executablePath(),
-          headless: true,
-          ignoreHTTPSErrors: true,
-        });
-      } catch (error) {
-        console.error("Error launching browser in production:", error);
-        throw error;
-      }
-    } else {
-      // Local development environment
-      try {
-        browser = await puppeteer.launch({
-          headless: true,
-          args: ["--no-sandbox", "--disable-setuid-sandbox"],
-        });
-      } catch (error) {
-        console.error("Error launching browser in development:", error);
-        throw error;
-      }
-    }
-
-    return browser;
-  }
 
     const browser = await getBrowser();
     const page = await browser?.newPage();
