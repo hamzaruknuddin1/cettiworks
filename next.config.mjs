@@ -19,6 +19,9 @@ const nextConfig = {
   },
   webpack: (config, { isServer }) => {
     if (isServer) {
+      config.externals.push({
+        'puppeteer-core': 'require("puppeteer-core")',
+      });
     }
     return config;
   },

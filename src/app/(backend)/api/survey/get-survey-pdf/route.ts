@@ -464,54 +464,71 @@ export async function POST(request: Request) {
         </body>
       </html>
     `;
-    // Check if running in production
-    const isProduction = process.env.NODE_ENV === "production";
-    console.log("$$$$$$$$$$$$$$$$$$$$$$", isProduction);
-    // Configure Puppeteer based on the environment
-    //  const browser = await (isProduction
-    //    ? puppeteerCore.launch({
-    //        args: chromium.args,
-    //        executablePath: await chromium.executablePath, // Path to Chromium binary in production
-    //        headless: chromium.headless,
-    //      })
-    //    : puppeteer.launch());
-    // Launch Puppeteer with @sparticuz/chromium configuration
-    // Determine if running in production or local
+    
 
-    // Configure Puppeteer executable path
+
     // let browser: any;
+
     // if (isProduction) {
+    //   // Production environment: Use Puppeteer Core and @sparticuz/chromium
+    //   const ex = await chromium.executablePath();
+    //   console.log(ex);
     //   browser = await puppeteerCore.launch({
+    //     args: chromium.args,
+    //     defaultViewport: chromium.defaultViewport,
+    //     executablePath: ex, 
     //     headless: true,
-    //     args: chromium.args, // Use optimized arguments for production
-    //     executablePath: await chromium.executablePath(), // Dynamically use the correct Chromium binary
     //   });
     // } else {
+    //   // Local environment: Use Puppeteer with bundled Chromium
     //   browser = await puppeteer.launch({
-    //     headless: true,
+    //     headless: true, // Enable headless mode
+    //     args: ["--no-sandbox", "--disable-setuid-sandbox"], // Safe args for local
     //   });
     // }
 
-    let browser: any;
+    const isProduction = process.env.NODE_ENV === "production";
 
+  async function getBrowser() {
+    let browser;
+    
     if (isProduction) {
-      // Production environment: Use Puppeteer Core and @sparticuz/chromium
-      const ex = await chromium.executablePath();
-      console.log(ex);
-      browser = await puppeteerCore.launch({
-        args: chromium.args,
-        defaultViewport: chromium.defaultViewport,
-        executablePath: ex, 
-        headless: true,
-      });
+      // Vercel production environment
+      try {
+        browser = await puppeteerCore.launch({
+          args: [
+            ...chromium.args,
+            "--hide-scrollbars",
+            "--disable-web-security",
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+          ],
+          defaultViewport: chromium.defaultViewport,
+          executablePath: await chromium.executablePath(),
+          headless: true,
+          ignoreHTTPSErrors: true,
+        });
+      } catch (error) {
+        console.error("Error launching browser in production:", error);
+        throw error;
+      }
     } else {
-      // Local environment: Use Puppeteer with bundled Chromium
-      browser = await puppeteer.launch({
-        headless: true, // Enable headless mode
-        args: ["--no-sandbox", "--disable-setuid-sandbox"], // Safe args for local
-      });
+      // Local development environment
+      try {
+        browser = await puppeteer.launch({
+          headless: true,
+          args: ["--no-sandbox", "--disable-setuid-sandbox"],
+        });
+      } catch (error) {
+        console.error("Error launching browser in development:", error);
+        throw error;
+      }
     }
 
+    return browser;
+  }
+
+    const browser = await getBrowser();
     const page = await browser?.newPage();
     await page.setContent(htmlContent, { waitUntil: "domcontentloaded" });
     const pdfBuffer = await page.pdf({
