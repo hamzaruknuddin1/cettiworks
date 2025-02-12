@@ -496,10 +496,12 @@ export async function POST(request: Request) {
 
     if (isProduction) {
       // Production environment: Use Puppeteer Core and @sparticuz/chromium
+      const ex = await chromium.executablePath();
+      console.log(ex);
       browser = await puppeteerCore.launch({
         args: chromium.args,
         defaultViewport: chromium.defaultViewport,
-        executablePath: await chromium.executablePath(),
+        executablePath: ex, 
         headless: true,
       });
     } else {
