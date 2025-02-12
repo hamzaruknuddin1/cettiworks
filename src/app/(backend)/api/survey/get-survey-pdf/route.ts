@@ -298,6 +298,8 @@ import puppeteer from "puppeteer";
 import chromium from "@sparticuz/chromium";
 export const dynamic = "force-dynamic"; // ✅ Forces API to fetch fresh data on every request
 
+export const runtime = 'nodejs';
+
 export async function POST(request: Request) {
   try {
     const { ids, startDate, endDate } = await request.json();
