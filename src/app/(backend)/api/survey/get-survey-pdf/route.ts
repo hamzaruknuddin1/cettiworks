@@ -497,7 +497,7 @@ export async function POST(request: Request) {
       browser = await puppeteerCore.launch({
         args: chromium.args,
         defaultViewport: chromium.defaultViewport,
-        executablePath: await chromium.executablePath("/var/task/.next/server/app/(backend)/api/survey/bin"),
+        executablePath: await chromium.executablePath(),
         headless: true,
       });
     } else {
